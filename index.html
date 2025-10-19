@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interactive 50x50 Grid</title>
+<style>
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: #f0f0f0;
+  }
+  #grid {
+    display: grid;
+    grid-template-columns: repeat(50, 15px);
+    grid-template-rows: repeat(50, 15px);
+    gap: 1px;
+    background-color: #ccc;
+    user-select: none;
+  }
+  .cell {
+    width: 15px;
+    height: 15px;
+    background-color: white;
+    border: 1px solid #eee;
+  }
+</style>
+</head>
+<body>
+
+<div id="grid"></div>
+
+<script>
+  const grid = document.getElementById("grid");
+
+  // Create 50x50 cells
+  for (let i = 0; i < 2500; i++) {
+    const cell = document.createElement("div");
+    cell.classList.add("cell");
+
+    // Prevent default right-click menu
+    cell.addEventListener("contextmenu", e => e.preventDefault());
+
+    // Left click = erase
+    cell.addEventListener("click", () => {
+      cell.style.backgroundColor = "white";
+    });
+
+    // Right click = fill
+    cell.addEventListener("mousedown", e => {
+      if (e.button === 2) { // right click
+        cell.style.backgroundColor = "black";
+      }
+    });
+
+    grid.appendChild(cell);
+  }
+</script>
+
+</body>
+</html>
