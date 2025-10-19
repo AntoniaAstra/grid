@@ -41,7 +41,22 @@
     margin: 10px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 15px;
+  }
+
+  button {
+    background: var(--cell-fill);
+    color: var(--cell-empty);
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.3s;
+  }
+
+  button:hover {
+    opacity: 0.8;
   }
 
   /* Slider toggle style */
@@ -135,6 +150,7 @@
     <span class="slider"></span>
   </label>
   <span id="modeLabel">☀️ Light Mode</span>
+  <button id="resetGrid">Reset Grid</button>
 </div>
 
 <div id="grid-container">
@@ -142,46 +158,82 @@
     <strong>Controls:</strong>
     🖱️ <b>Left Click</b> – Erase<br>
     🖱️ <b>Right Click</b> – Fill<br><br>
-    💡 Tip: Right-click anywhere to draw faster!
+    💾 Grid + Theme auto-save!<br>
+    🔁 “Reset Grid” clears all cells but keeps your theme.
   </div>
   <div id="grid"></div>
 </div>
 
 <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const grid = document.getElementById("grid");
-    const darkToggle = document.getElementById("darkModeToggle");
-    const modeLabel = document.getElementById("modeLabel");
+document.addEventListener("DOMContentLoaded", () => {
+  const grid = document.getElementById("grid");
+  const darkToggle = document.getElementById("darkModeToggle");
+  const modeLabel = document.getElementById("modeLabel");
+  const resetButton = document.getElementById("resetGrid");
 
-    // Create 50x50 cells
-    for (let i = 0; i < 2500; i++) {
-      const cell = document.createElement("div");
-      cell.classList.add("cell");
+  // --- Restore settings ---
+  const savedTheme = localStorage.getItem("gridTheme");
+  const savedGrid = localStorage.getItem("gridData");
 
-      // Prevent default right-click menu
-      cell.addEventListener("contextmenu", e => e.preventDefault());
+  if (savedTheme === "dark") {
+    document.body.classList.add("dark");
+    darkToggle.checked = true;
+    modeLabel.textContent = "🌙 Dark Mode";
+  }
 
-      // Left click = erase
-      cell.addEventListener("click", () => {
-        cell.style.backgroundColor = getComputedStyle(document.body).getPropertyValue('--cell-empty');
-      });
+  // --- Build Grid ---
+  for (let i = 0; i < 2500; i++) {
+    const cell = document.createElement("div");
+    cell.classList.add("cell");
 
-      // Right click = fill
-      cell.addEventListener("mousedown", e => {
-        if (e.button === 2) {
-          cell.style.backgroundColor = getComputedStyle(document.body).getPropertyValue('--cell-fill');
-        }
-      });
-
-      grid.appendChild(cell);
+    // Restore fill state
+    if (savedGrid && savedGrid[i] === "1") {
+      cell.style.backgroundColor = getComputedStyle(document.body).getPropertyValue('--cell-fill');
     }
 
-    // Toggle dark mode
-    darkToggle.addEventListener("change", () => {
-      document.body.classList.toggle("dark", darkToggle.checked);
-      modeLabel.textContent = darkToggle.checked ? "🌙 Dark Mode" : "☀️ Light Mode";
+    cell.addEventListener("contextmenu", e => e.preventDefault());
+
+    cell.addEventListener("click", () => {
+      cell.style.backgroundColor = getComputedStyle(document.body).getPropertyValue('--cell-empty');
+      saveGrid();
     });
+
+    cell.addEventListener("mousedown", e => {
+      if (e.button === 2) {
+        cell.style.backgroundColor = getComputedStyle(document.body).getPropertyValue('--cell-fill');
+        saveGrid();
+      }
+    });
+
+    grid.appendChild(cell);
+  }
+
+  // --- Save grid state ---
+  function saveGrid() {
+    const cells = Array.from(document.querySelectorAll(".cell"));
+    const fillColor = getComputedStyle(document.body).getPropertyValue('--cell-fill').trim();
+    const data = cells.map(c => {
+      const color = c.style.backgroundColor;
+      return color === fillColor ? "1" : "0";
+    }).join("");
+    localStorage.setItem("gridData", data);
+  }
+
+  // --- Dark mode toggle ---
+  darkToggle.addEventListener("change", () => {
+    document.body.classList.toggle("dark", darkToggle.checked);
+    modeLabel.textContent = darkToggle.checked ? "🌙 Dark Mode" : "☀️ Light Mode";
+    localStorage.setItem("gridTheme", darkToggle.checked ? "dark" : "light");
   });
+
+  // --- Reset grid ---
+  resetButton.addEventListener("click", () => {
+    const cells = document.querySelectorAll(".cell");
+    const emptyColor = getComputedStyle(document.body).getPropertyValue('--cell-empty');
+    cells.forEach(c => c.style.backgroundColor = emptyColor);
+    localStorage.removeItem("gridData"); // Clears saved pattern
+  });
+});
 </script>
 
 </body>
