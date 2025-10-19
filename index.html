@@ -5,58 +5,183 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Interactive 50x50 Grid</title>
 <style>
+  :root {
+    --bg-color: #f0f0f0;
+    --grid-bg: #999;
+    --cell-border: #ddd;
+    --cell-empty: #ffffff;
+    --cell-fill: #000000;
+    --text-color: #000;
+    --panel-bg: #ffffffaa;
+  }
+
+  body.dark {
+    --bg-color: #111;
+    --grid-bg: #333;
+    --cell-border: #666;
+    --cell-empty: #222;
+    --cell-fill: #00ffcc;
+    --text-color: #f0f0f0;
+    --panel-bg: #222222aa;
+  }
+
   body {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
     height: 100vh;
-    background: #f0f0f0;
+    margin: 0;
+    background: var(--bg-color);
+    transition: background 0.3s, color 0.3s;
+    font-family: sans-serif;
+    color: var(--text-color);
   }
+
+  #controls {
+    margin: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Slider toggle style */
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 25px;
+  }
+
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 25px;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 19px;
+    width: 19px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+  }
+
+  input:checked + .slider {
+    background-color: #2196F3;
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(25px);
+  }
+
+  #grid-container {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    flex-grow: 1;
+    width: 100%;
+  }
+
+  #sidepanel {
+    padding: 15px;
+    margin-right: 15px;
+    border-radius: 10px;
+    background-color: var(--panel-bg);
+    backdrop-filter: blur(5px);
+    font-size: 14px;
+    max-height: 80%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
   #grid {
     display: grid;
     grid-template-columns: repeat(50, 15px);
     grid-template-rows: repeat(50, 15px);
     gap: 1px;
-    background-color: #ccc;
+    background-color: var(--grid-bg);
     user-select: none;
   }
+
   .cell {
     width: 15px;
     height: 15px;
-    background-color: white;
-    border: 1px solid #eee;
+    background-color: var(--cell-empty);
+    border: 1px solid var(--cell-border);
+    transition: background-color 0.2s;
   }
 </style>
 </head>
 <body>
 
-<div id="grid"></div>
+<div id="controls">
+  <label class="switch">
+    <input type="checkbox" id="darkModeToggle">
+    <span class="slider"></span>
+  </label>
+  <span id="modeLabel">☀️ Light Mode</span>
+</div>
+
+<div id="grid-container">
+  <div id="sidepanel">
+    <strong>Controls:</strong>
+    🖱️ <b>Left Click</b> – Erase<br>
+    🖱️ <b>Right Click</b> – Fill<br><br>
+    💡 Tip: Right-click anywhere to draw faster!
+  </div>
+  <div id="grid"></div>
+</div>
 
 <script>
-  const grid = document.getElementById("grid");
+  document.addEventListener("DOMContentLoaded", () => {
+    const grid = document.getElementById("grid");
+    const darkToggle = document.getElementById("darkModeToggle");
+    const modeLabel = document.getElementById("modeLabel");
 
-  // Create 50x50 cells
-  for (let i = 0; i < 2500; i++) {
-    const cell = document.createElement("div");
-    cell.classList.add("cell");
+    // Create 50x50 cells
+    for (let i = 0; i < 2500; i++) {
+      const cell = document.createElement("div");
+      cell.classList.add("cell");
 
-    // Prevent default right-click menu
-    cell.addEventListener("contextmenu", e => e.preventDefault());
+      // Prevent default right-click menu
+      cell.addEventListener("contextmenu", e => e.preventDefault());
 
-    // Left click = erase
-    cell.addEventListener("click", () => {
-      cell.style.backgroundColor = "white";
+      // Left click = erase
+      cell.addEventListener("click", () => {
+        cell.style.backgroundColor = getComputedStyle(document.body).getPropertyValue('--cell-empty');
+      });
+
+      // Right click = fill
+      cell.addEventListener("mousedown", e => {
+        if (e.button === 2) {
+          cell.style.backgroundColor = getComputedStyle(document.body).getPropertyValue('--cell-fill');
+        }
+      });
+
+      grid.appendChild(cell);
+    }
+
+    // Toggle dark mode
+    darkToggle.addEventListener("change", () => {
+      document.body.classList.toggle("dark", darkToggle.checked);
+      modeLabel.textContent = darkToggle.checked ? "🌙 Dark Mode" : "☀️ Light Mode";
     });
-
-    // Right click = fill
-    cell.addEventListener("mousedown", e => {
-      if (e.button === 2) { // right click
-        cell.style.backgroundColor = "black";
-      }
-    });
-
-    grid.appendChild(cell);
-  }
+  });
 </script>
 
 </body>
