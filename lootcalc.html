@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>7 Days to Die Loot Probability Calculator</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #121212; color: #e0e0e0; margin: 40px; }
+    h1 { color: #ffcc00; text-align: center; }
+    .container { max-width: 800px; margin: auto; background: #1e1e1e; padding: 20px; border-radius: 12px; box-shadow: 0 0 10px #000; }
+    label { display: block; margin-top: 10px; }
+    select, input { width: 100%; padding: 8px; margin-top: 5px; border-radius: 6px; border: 1px solid #333; background: #222; color: #eee; }
+    button { margin-top: 15px; background: #ffcc00; color: #000; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    button:hover { background: #ffaa00; }
+    table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+    th, td { padding: 8px; text-align: left; border-bottom: 1px solid #333; }
+    th { color: #ffcc00; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>7 Days to Die Loot Probability Calculator</h1>
+
+    <label for="lootStage">Loot Stage:</label>
+    <input type="number" id="lootStage" min="1" max="300" value="100">
+
+    <label for="containerType">Container Type:</label>
+    <select id="containerType">
+      <option value="gunSafe">Gun Safe</option>
+      <option value="weaponsBag">Weapons Bag</option>
+      <option value="car">Vehicle (Car)</option>
+      <option value="trash">Trash</option>
+    </select>
+
+    <label for="luckyLooter">Lucky Looter Perk Level:</label>
+    <input type="number" id="luckyLooter" min="0" max="5" value="0">
+
+    <button onclick="calculateLoot()">Calculate Probabilities</button>
+
+    <canvas id="lootChart" height="120"></canvas>
+
+    <table id="lootTable">
+      <thead>
+        <tr><th>Item</th><th>Probability (%)</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const lootData = {
+      gunSafe: {
+        pistol: 10,
+        ak47: 3,
+        huntingRifle: 5,
+        pumpShotgun: 2,
+        magnum: 1
+      },
+      weaponsBag: {
+        boneKnife: 10,
+        pipePistol: 8,
+        pipeRifle: 6,
+        pistol: 4,
+        ak47: 2
+      },
+      car: {
+        wrench: 5,
+        engine: 3,
+        battery: 2,
+        oil: 10,
+        gasCan: 15
+      },
+      trash: {
+        paper: 15,
+        glassJar: 10,
+        ductTape: 2,
+        brass: 1,
+        nails: 5
+      }
+    };
+
+    function calculateLoot() {
+      const stage = parseInt(document.getElementById('lootStage').value);
+      const container = document.getElementById('containerType').value;
+      const looter = parseInt(document.getElementById('luckyLooter').value);
+
+      const data = lootData[container];
+      let totalWeight = Object.values(data).reduce((a,b) => a+b, 0);
+
+      const tableBody = document.querySelector('#lootTable tbody');
+      tableBody.innerHTML = '';
+
+      const chartLabels = [];
+      const chartData = [];
+
+      for (const [item, weight] of Object.entries(data)) {
+        let adjustedWeight = weight + (looter * 0.5 * weight) + (stage / 200);
+        const probability = (adjustedWeight / totalWeight) * 100;
+
+        chartLabels.push(item);
+        chartData.push(probability.toFixed(2));
+
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${item}</td><td>${probability.toFixed(2)}</td>`;
+        tableBody.appendChild(row);
+      }
+
+      renderChart(chartLabels, chartData);
+    }
+
+    let lootChart;
+    function renderChart(labels, data) {
+      const ctx = document.getElementById('lootChart');
+      if (lootChart) lootChart.destroy();
+      lootChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Drop Probability (%)',
+            data: data,
+            backgroundColor: '#ffcc00'
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, grid: { color: '#333' } },
+            x: { grid: { color: '#333' } }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
